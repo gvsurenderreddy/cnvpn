@@ -37,14 +37,18 @@ chomp($response);
         }
 } else {
 my %conf=&getconf;
-print "connect vpn at $conf{serverurl} as $conf{username}(y/n)?";
+print "connect vpn at $conf{serverurl} as $conf{username} (y/n)?";
 my $response=<STDIN>;
 chomp($response); 
         given ($response) { 
                 when (/['y','yes']/i) {
                 say 'connecting...';
                 system("echo $conf{password} | sudo openconnect -u $conf{username} $conf{serverurl} --passwd-on-stdin -q -b");
-                 }            
+                  if ($conf{routenets}) {
+                  my $tundev=`ip link | grep tun | awk -F\'\: \' '\{print \$2\}\'`;
+                  system("sudo ip route add $conf{routenets} dev $tundev");
+                  } 
+                }            
                 when (/['n','no']/i) {
                 say 'ok...over and out.';
                 exit 0;
@@ -54,6 +58,4 @@ chomp($response);
                 exit 0;
                     }
         }
-
-
 }
